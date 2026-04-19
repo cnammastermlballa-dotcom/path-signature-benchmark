@@ -1,0 +1,15 @@
+split,metric,value
+train,n_samples,100.0
+train,series_length,96.0
+train,n_classes,2.0
+train,class_-1_count,31.0
+train,class_-1_pct,31.0
+train,class_1_count,69.0
+train,class_1_pct,69.0
+test,n_samples,100.0
+test,series_length,96.0
+test,n_classes,2.0
+test,class_-1_count,36.0
+test,class_-1_pct,36.0
+test,class_1_count,64.0
+test,class_1_pct,64.0
