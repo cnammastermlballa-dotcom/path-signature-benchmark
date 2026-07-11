@@ -1,10 +1,10 @@
 """
-Experiment 4.1 — Load, explore and visualize ECG200.
+Experiment 5.1.1 — Load, explore and visualize ECG200.
 
-Chapter 4: Datasets and Representations
+Chapter 5, Section 5.1: Datasets
 Dataset: ECG200 (UCR Time Series Archive)
-Output: results/chap4/4_1_load_ecg200.csv
-        results/chap4/4_1_load_ecg200.png
+Output: results/chap5/5_1_1_load_ecg200.csv
+        results/chap5/5_1_1_load_ecg200.png
 """
 
 import logging
@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
 
 RANDOM_STATE = 42
-RESULTS_DIR = Path("results/chap4")
+RESULTS_DIR = Path("results/chap5")
 DATA_DIR = Path("data/raw/ECG200")
 UCR_URL = (
     "https://www.timeseriesclassification.com/aeon-toolkit/ECG200.zip"
@@ -106,31 +106,26 @@ def run_experiment(
         y_test:  Test labels.
 
     Returns:
-        DataFrame with columns [split, metric, value].
+        DataFrame with columns [metric, train, test]. Rows: n_train, n_test,
+        T, d, n_classes, and one row per class holding sample counts.
     """
     classes = np.unique(np.concatenate([y_train, y_test]))
-    rows = []
+    n_classes = len(classes)
 
-    for split_name, X, y in [("train", X_train, y_train), ("test", X_test, y_test)]:
-        rows.append({"split": split_name, "metric": "n_samples", "value": len(y)})
-        rows.append({"split": split_name, "metric": "series_length", "value": X.shape[1]})
-        rows.append({"split": split_name, "metric": "n_classes", "value": len(classes)})
-        for cls in classes:
-            count = int(np.sum(y == cls))
-            rows.append(
-                {
-                    "split": split_name,
-                    "metric": f"class_{cls}_count",
-                    "value": count,
-                }
-            )
-            rows.append(
-                {
-                    "split": split_name,
-                    "metric": f"class_{cls}_pct",
-                    "value": round(100 * count / len(y), 2),
-                }
-            )
+    rows = [
+        {"metric": "n_series",  "train": len(y_train), "test": len(y_test)},
+        {"metric": "T",         "train": X_train.shape[1], "test": X_test.shape[1]},
+        {"metric": "d",         "train": 1,            "test": 1},
+        {"metric": "n_classes", "train": n_classes,    "test": n_classes},
+    ]
+    for cls in classes:
+        rows.append(
+            {
+                "metric": f"class_{cls}_count",
+                "train":  int(np.sum(y_train == cls)),
+                "test":   int(np.sum(y_test == cls)),
+            }
+        )
 
     results = pd.DataFrame(rows)
     logger.info("Dataset statistics:\n%s", results.to_string(index=False))
@@ -213,7 +208,7 @@ def main() -> None:
     fig = plot_results(X_train, y_train)
 
     logger.info("Saving results...")
-    save_results(results, fig, "4_1_load_ecg200")
+    save_results(results, fig, "5_1_1_load_ecg200")
     plt.close(fig)
     logger.info("Done.")
 

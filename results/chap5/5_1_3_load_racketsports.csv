@@ -1,0 +1,9 @@
+metric,train,test
+n_series,151,152
+T,30,30
+d,6,6
+n_classes,4,4
+class_bad_clear_count,43,43
+class_bad_smash_count,39,40
+class_squash_bh_count,34,34
+class_squash_fh_count,35,35

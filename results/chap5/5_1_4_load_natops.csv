@@ -1,0 +1,11 @@
+metric,train,test
+n_series,180,180
+T,51,51
+d,24,24
+n_classes,6,6
+class_0_count,30,30
+class_1_count,30,30
+class_2_count,30,30
+class_3_count,30,30
+class_4_count,30,30
+class_5_count,30,30
