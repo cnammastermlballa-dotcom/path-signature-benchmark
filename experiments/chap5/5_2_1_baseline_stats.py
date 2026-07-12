@@ -45,11 +45,12 @@ PROCESSED_DIR = Path("data/processed")
 RESULTS_DIR = Path("results/chap5")
 NAME = "5_2_1_baseline_stats"
 
-DATASETS = ["ecg200", "racketsports", "chartraj"]
+DATASETS = ["ecg200", "racketsports", "chartraj", "natops"]
 DISPLAY_NAMES = {
     "ecg200": "ECG200",
     "racketsports": "RacketSports",
     "chartraj": "CharTraj",
+    "natops": "NATOPS",
 }
 MODELS = [("LR-L2", "l2", "lbfgs"), ("LR-L1", "l1", "liblinear")]
 CS = np.logspace(-3, 3, 7)
