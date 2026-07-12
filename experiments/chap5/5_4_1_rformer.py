@@ -2,16 +2,27 @@
 Experiment 5.4.1 — Multi-view signature + Rough Transformer (RFormer).
 
 Chapter 5, Axe 3: Rough Transformer.
-Splits each series into overlapping windows, computes the (best_config,
-N*) truncated signature per window, and feeds the resulting sequence of
-window signatures into a small Transformer encoder (RFormer-style). The
-tokens seen by self-attention are signatures of local sub-paths rather
-than raw samples — following the design of Arroyo et al. (NeurIPS 2024,
+Splits each series into overlapping windows, computes a truncated
+signature per window with the `lin+time` augmentation and depth N*
+inherited from Axe 1, and feeds the resulting sequence of window
+signatures into a small Transformer encoder (RFormer-style). The tokens
+seen by self-attention are signatures of local sub-paths rather than
+raw samples — following the design of Arroyo et al. (NeurIPS 2024,
 AlvaroArroyo/RFormer).
 
 Datasets     : CharTraj, NATOPS
-Best config  : loaded from results/chap5/best_config_{dataset}.txt (Axe 2)
-Truncation N : loaded from results/chap5/optimal_N_{dataset}.txt   (Axe 1)
+Augmentation : lin+time, hard-coded (see METHODOLOGICAL NOTE below)
+Truncation N : loaded from results/chap5/optimal_N_{dataset}.txt (Axe 1)
+
+METHODOLOGICAL NOTE
+-------------------
+RFormer uses `lin+time` exclusively, independently of the best_config
+selected by Axe 2 (5_3_1). This deliberate choice isolates the
+architectural contribution of the Transformer from the effect of the
+augmentation: measuring both effects at once would prevent us from
+concluding on what the attention mechanism itself adds relative to the
+signature+LASSO baseline at the same `lin+time` representation.
+See thesis section 5.5.4 for the discussion.
 
 Note: this file implements the RFormer idea from scratch (PyTorch
 Transformer encoder over signature tokens). It is a pragmatic
@@ -36,7 +47,6 @@ required.
 
 Input : data/processed/{chartraj,natops}_{X,y}_{train,test}.npy
         results/chap5/optimal_N_{chartraj,natops}.txt
-        results/chap5/best_config_{chartraj,natops}.txt
 Output: results/chap5/5_4_1_rformer.csv
         results/chap5/5_4_1_rformer.png
 """
@@ -72,6 +82,11 @@ DISPLAY_NAMES = {
     "chartraj": "CharTraj",
     "natops":   "NATOPS",
 }
+
+# Note: RFormer uses lin+time exclusively to isolate the architectural
+# contribution of the Transformer from the choice of augmentation. This is a
+# deliberate methodological decision (see thesis section 5.5.4).
+CONFIG = "lin+time"
 
 # Multi-view (windowing) configuration.
 N_WINDOWS = 8
@@ -147,11 +162,9 @@ def load_dataset(name: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndar
     return X_train, y_train, X_test, y_test
 
 
-def load_axe12_selection(name: str) -> Tuple[str, int]:
-    """Read best_config and N* from Axe 1/2 output files."""
-    config = (RESULTS_DIR / f"best_config_{name}.txt").read_text().strip()
-    N = int((RESULTS_DIR / f"optimal_N_{name}.txt").read_text().strip())
-    return config, N
+def load_optimal_N(name: str) -> int:
+    """Read N* from Axe 1 output file. Augmentation is hard-coded to CONFIG."""
+    return int((RESULTS_DIR / f"optimal_N_{name}.txt").read_text().strip())
 
 
 def _to_series_list(X: np.ndarray) -> List[np.ndarray]:
@@ -381,8 +394,11 @@ def run_experiment() -> pd.DataFrame:
     rows = []
     for ds in DATASETS:
         logger.info("=== %s ===", DISPLAY_NAMES[ds])
-        config, N = load_axe12_selection(ds)
-        logger.info("  Axe 1/2 selection: config=%s, N*=%d", config, N)
+        config = CONFIG
+        N = load_optimal_N(ds)
+        logger.info(
+            "  config=%s (hard-coded), N*=%d (from Axe 1)", config, N,
+        )
 
         X_train, y_train, X_test, y_test = load_dataset(ds)
         n_classes = int(np.unique(y_train).size)
