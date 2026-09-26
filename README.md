@@ -61,6 +61,18 @@ terminal. To also keep it in a file:
 Some steps are slow on CPU (e.g. CharTraj LR-L1 at N=2 took ~10 min in the
 reference run), so a pause in the output does not mean the run is stuck.
 
+A successful run ends with:
+
+```
+INFO — Saved 5_5_1_comparison.csv and 5_5_1_comparison.png
+INFO — Done.
+Done. Outputs in results/chap5/
+```
+
+The last line is only printed if every script succeeded: `run_all.sh` stops at
+the first error, and the `=== 5_x_y_... ===` header above the Python traceback
+shows which script failed.
+
 Including RFormer training (GPU strongly recommended):
 
 ```bash
