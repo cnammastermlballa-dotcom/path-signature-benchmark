@@ -44,7 +44,8 @@ pip install -r requirements.txt
 
 All scripts must be run **from the repository root** (they use relative paths).
 
-Whole pipeline (CPU, reuses the committed RFormer results):
+Whole pipeline on CPU. RFormer is not retrained: its reference results are
+copied from `results/reference/chap5/` so the final comparison can be built.
 
 ```bash
 ./run_all.sh
@@ -65,23 +66,41 @@ python experiments/chap5/5_2_2_signature_lr.py
 Script order matters: `5_0` produces `data/processed/` (already committed, so it
 can be skipped), `5_2_2` writes `optimal_N_*.txt` used by `5_3_1` and `5_4_1`,
 `5_3_1` writes `best_config_*.txt`, and `5_5_1` aggregates all CSVs.
+To run a later script alone without rerunning the earlier ones, seed its
+inputs from the reference results first:
+
+```bash
+mkdir -p results/chap5
+cp results/reference/chap5/*.txt results/chap5/          # for 5_3_1 / 5_4_1
+cp results/reference/chap5/*.csv results/chap5/          # for 5_5_1
+```
 
 ### Axe 3 on Google Colab
 
-Open `results/chap5/demo_google_colab.ipynb` in Colab (Runtime → T4 GPU), or run:
+Open `notebooks/demo_google_colab.ipynb` in Colab (Runtime → T4 GPU), or run:
 
 ```bash
 !git clone https://github.com/cnammastermlballa-dotcom/path-signature-benchmark.git
 %cd path-signature-benchmark
 !pip install -q iisignature torch scikit-learn matplotlib pandas
+!mkdir -p results/chap5 && cp results/reference/chap5/optimal_N_*.txt results/chap5/
 !python experiments/chap5/5_4_1_rformer.py
 ```
 
 ## Outputs
 
-Everything is written to `results/chap5/` as CSV + PNG (one pair per script),
-plus `optimal_N_{dataset}.txt` and `best_config_{dataset}.txt`. The committed
-files are the reference results of the thesis.
+Scripts write to `results/chap5/` (git-ignored, created on the first run): one
+CSV + PNG per script, plus `optimal_N_{dataset}.txt` and
+`best_config_{dataset}.txt`.
+
+The results reported in the thesis are committed in `results/reference/chap5/`,
+with the same file names, so you can compare your run against them, e.g.:
+
+```bash
+diff results/chap5/5_5_1_comparison.csv results/reference/chap5/5_5_1_comparison.csv
+```
+
+Timing columns will differ with hardware.
 
 Expected test accuracy (`5_5_1_comparison.csv`):
 
@@ -101,5 +120,7 @@ Timings depend on hardware.
 ```
 experiments/chap5/   experiment scripts (5_0 … 5_5_1)
 data/processed/      numpy arrays produced by 5_0_preprocess.py
-results/chap5/       CSV + PNG outputs, Colab notebook
+results/reference/   reference results of the thesis (committed)
+results/chap5/       your run's outputs (git-ignored, created by the scripts)
+notebooks/           Colab notebook for the Axe 3 GPU run
 ```

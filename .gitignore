@@ -8,3 +8,6 @@ __pycache__/
 thesis/
 CLAUDE.md
 .claude/
+
+# Generated outputs (reference copies live in results/reference/)
+results/chap5/

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Run the full Chapter 5 pipeline from the repository root.
-# Usage: ./run_all.sh            (CPU steps; reuses committed RFormer results)
+# Outputs go to results/chap5/ (git-ignored); reference results of the
+# thesis are in results/reference/chap5/.
+# Usage: ./run_all.sh            (CPU steps; copies reference RFormer results)
 #        ./run_all.sh --rformer  (also trains RFormer, GPU recommended)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -24,7 +26,8 @@ run 5_3_1_augmentations.py
 if $RUN_RFORMER; then
     run 5_4_1_rformer.py
 else
-    echo "=== 5_4_1_rformer.py skipped (using committed results/chap5/5_4_1_rformer.csv) ==="
+    echo "=== 5_4_1_rformer.py skipped: copying reference RFormer results ==="
+    cp results/reference/chap5/5_4_1_rformer.csv results/reference/chap5/5_4_1_rformer.png results/chap5/
 fi
 run 5_5_1_comparison.py
 
