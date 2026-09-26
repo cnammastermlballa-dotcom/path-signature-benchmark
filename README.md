@@ -58,8 +58,22 @@ terminal. To also keep it in a file:
 ./run_all.sh 2>&1 | tee run_all.log
 ```
 
-Some steps are slow on CPU (e.g. CharTraj LR-L1 at N=2 took ~10 min in the
-reference run), so a pause in the output does not mean the run is stuck.
+### Expected run time
+
+Measured on a laptop CPU (Intel i5-6300U, 2 cores / 4 threads):
+
+| Step | Time |
+|------|------|
+| `5_0`, `5_1_*`, `5_2_1` (preprocessing, exploration, baseline) | ~ 2 min |
+| `5_2_2` signature + LR, N=1..10 (CharTraj ≈ 95 % of it) | ~ 45–50 min |
+| `5_3_1` augmentations | ~ 30–35 min |
+| `5_5_1` synthesis | < 1 min |
+| **`./run_all.sh` total** | **~ 85 min** |
+| `5_4_1` RFormer on a Colab T4 GPU (`--rformer` or notebook) | ~ 40 s |
+
+A faster machine will be quicker. Some single fits are long (e.g. CharTraj
+LR-L1 at N=2 took ~10 min), so a pause in the output does not mean the run is
+stuck. On CPU, `5_4_1` is much slower than on a GPU.
 
 A successful run ends with:
 
