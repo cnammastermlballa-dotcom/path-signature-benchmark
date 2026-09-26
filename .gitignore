@@ -14,3 +14,4 @@ results/chap5/
 
 # Downloaded automatically by the scripts
 data/raw/
+*.log

@@ -51,6 +51,16 @@ copied from `results/reference/chap5/` so the final comparison can be built.
 ./run_all.sh
 ```
 
+Progress (per-N accuracy, CV scores, fit times) is only printed to the
+terminal. To also keep it in a file:
+
+```bash
+./run_all.sh 2>&1 | tee run_all.log
+```
+
+Some steps are slow on CPU (e.g. CharTraj LR-L1 at N=2 took ~10 min in the
+reference run), so a pause in the output does not mean the run is stuck.
+
 Including RFormer training (GPU strongly recommended):
 
 ```bash
