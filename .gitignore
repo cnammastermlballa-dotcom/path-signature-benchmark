@@ -11,3 +11,6 @@ CLAUDE.md
 
 # Generated outputs (reference copies live in results/reference/)
 results/chap5/
+
+# Downloaded automatically by the scripts
+data/raw/
