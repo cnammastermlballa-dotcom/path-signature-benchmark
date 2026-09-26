@@ -1,0 +1,105 @@
+# Path Signature Benchmark
+
+Experiments for Chapter 5 of a Master 2 thesis (CNAM) on **path signatures
+for time-series classification**. Four datasets, three axes:
+
+| Axe | Script | Question |
+|-----|--------|----------|
+| 1 | `5_2_1`, `5_2_2` | Signature (lin+time) + logistic regression vs. statistical baseline; optimal truncation depth N* |
+| 2 | `5_3_1` | Effect of path augmentations (time, lead-lag, rectilinear, cumsum) |
+| 3 | `5_4_1` | Rough Transformer: windowed signatures as tokens for a Transformer encoder |
+| — | `5_5_1` | Final comparison table (accuracy + computational cost) |
+
+Datasets (UCR/UEA archive, downloaded automatically via `sktime`):
+
+| Dataset | Train / Test | Channels d | Classes | Length T |
+|---------|--------------|-----------|---------|----------|
+| ECG200 | 100 / 100 | 1 | 2 | 96 |
+| RacketSports | 151 / 152 | 6 | 4 | 30 |
+| CharacterTrajectories | 1422 / 1436 | 3 | 20 | 60–180 |
+| NATOPS | 180 / 180 | 24 | 6 | 51 |
+
+## Installation
+
+Python 3.11. With conda:
+
+```bash
+git clone https://github.com/cnammastermlballa-dotcom/path-signature-benchmark.git
+cd path-signature-benchmark
+conda env create -f environment.yml
+conda activate path-sig-benchmark
+```
+
+Or with pip in a virtual environment:
+
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install numpy==2.3.5          # iisignature needs numpy at build time
+pip install -r requirements.txt
+```
+
+`torch` is only needed for Axe 3 (`5_4_1_rformer.py`).
+
+## Running
+
+All scripts must be run **from the repository root** (they use relative paths).
+
+Whole pipeline (CPU, reuses the committed RFormer results):
+
+```bash
+./run_all.sh
+```
+
+Including RFormer training (GPU strongly recommended):
+
+```bash
+./run_all.sh --rformer
+```
+
+Or a single script, e.g.:
+
+```bash
+python experiments/chap5/5_2_2_signature_lr.py
+```
+
+Script order matters: `5_0` produces `data/processed/` (already committed, so it
+can be skipped), `5_2_2` writes `optimal_N_*.txt` used by `5_3_1` and `5_4_1`,
+`5_3_1` writes `best_config_*.txt`, and `5_5_1` aggregates all CSVs.
+
+### Axe 3 on Google Colab
+
+Open `results/chap5/demo_google_colab.ipynb` in Colab (Runtime → T4 GPU), or run:
+
+```bash
+!git clone https://github.com/cnammastermlballa-dotcom/path-signature-benchmark.git
+%cd path-signature-benchmark
+!pip install -q iisignature torch scikit-learn matplotlib pandas
+!python experiments/chap5/5_4_1_rformer.py
+```
+
+## Outputs
+
+Everything is written to `results/chap5/` as CSV + PNG (one pair per script),
+plus `optimal_N_{dataset}.txt` and `best_config_{dataset}.txt`. The committed
+files are the reference results of the thesis.
+
+Expected test accuracy (`5_5_1_comparison.csv`):
+
+| Dataset | Baseline stats | Sig + LR | Sig + augmentation | RFormer |
+|---------|----------------|----------|--------------------|---------|
+| ECG200 | 0.71 | 0.83 | 0.82 | – |
+| RacketSports | 0.77 | 0.84 | 0.84 | – |
+| CharacterTrajectories | 0.94 | 0.98 | 0.99 | 0.99 |
+| NATOPS | 0.84 | 0.91 | 0.91 | 0.93 |
+
+Linear models use fixed seeds (`random_state=42`) and should reproduce exactly;
+RFormer on GPU may vary slightly (±0.01) due to non-deterministic CUDA kernels.
+Timings depend on hardware.
+
+## Repository layout
+
+```
+experiments/chap5/   experiment scripts (5_0 … 5_5_1)
+data/processed/      numpy arrays produced by 5_0_preprocess.py
+results/chap5/       CSV + PNG outputs, Colab notebook
+```

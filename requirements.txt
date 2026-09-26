@@ -1,0 +1,11 @@
+# Core stack (Axes 1-2, preprocessing, synthesis) — versions of the thesis run
+numpy==2.3.5
+pandas==2.3.3
+scipy==1.17.1
+scikit-learn==1.7.2
+matplotlib==3.10.8
+sktime==0.40.1
+iisignature==0.24
+
+# Axe 3 only (5_4_1_rformer.py) — GPU recommended, see README
+torch>=2.2
