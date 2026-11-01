@@ -23,10 +23,18 @@ scores that differ only by floating-point noise count as a tie. The LASSO
 N* (LR-L1) is used by Axe 3 (5_3_1); both are read by the synthesis (5_4_1).
 
 `is_N_star` marks each model's N*. `n_star_at_cap` = 1 when N* is the
-largest N evaluated (the true optimum may lie beyond the grid);
-`cap_reason` then says which limit applied: "n_range" (N* = max N_RANGE)
-or "max_feature_dim" (the next depth would exceed MAX_FEATURE_DIM). These
-N* points are starred in the figure.
+largest N fitted for that model (the true optimum may lie beyond the grid);
+`cap_reason` then says which limit applied: "n_range" (N* = max N_RANGE),
+"max_feature_dim" (the next depth would exceed MAX_FEATURE_DIM) or
+"fit_failed" (the next depth raised MemoryError). These N* points are
+starred in the figure.
+
+Memory: a MemoryError while computing the signatures (both models) or
+fitting one model at a given N is logged as a WARNING and the row(s) are
+written with NaN metrics; the sweep goes on. Any other exception stops the
+script. At the end the script logs the number of rows skipped for memory
+reasons, and exits with code 1 (after saving its outputs) if the N* row of
+any (dataset, model) is missing or NaN.
 
 Datasets: ECG200, RacketSports, CharacterTrajectories, NATOPS
 Metrics : accuracy, F1 macro, n_features, CV score (mean, std), C,
@@ -45,6 +53,7 @@ Output: results/chap5/5_1_2_signature_lr.csv
 
 import logging
 import os
+import sys
 import time
 import warnings
 from pathlib import Path
@@ -66,6 +75,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from embeddings import lin_time
+from runinfo import log_versions
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
@@ -228,6 +238,15 @@ def fit_evaluate(
     return metrics, y_pred
 
 
+def _nan_metrics() -> dict:
+    """Placeholder metrics for a row skipped on MemoryError."""
+    return {
+        "accuracy": np.nan, "f1_macro": np.nan, "cv_score": np.nan,
+        "cv_std": np.nan, "C_best": np.nan, "fit_time_s": np.nan,
+        "n_convergence_warnings": np.nan, "c_at_grid_edge": np.nan,
+    }
+
+
 def warm_up() -> None:
     """Untimed dummy fits, so the first timed fit does not pay joblib's worker start-up."""
     rng = np.random.default_rng(RANDOM_STATE)
@@ -265,7 +284,7 @@ def run_experiment() -> Tuple[
         # replaces the current best, so ties go to the smallest N.
         best_cv = {m: -np.inf for m, _, _ in MODELS}
         best_N: Dict[str, Optional[int]] = {m: None for m, _, _ in MODELS}
-        evaluated_N: List[int] = []
+        fitted_N: Dict[str, List[int]] = {m: [] for m, _, _ in MODELS}
         for N in N_RANGE:
             dim = sig_dim(d_aug, N)
             if dim > MAX_FEATURE_DIM:
@@ -274,25 +293,45 @@ def run_experiment() -> Tuple[
                     N, dim, MAX_FEATURE_DIM,
                 )
                 continue
-            t0 = time.perf_counter()
-            X_train_f = compute_signatures(train_list, N)
-            X_test_f = compute_signatures(test_list, N)
-            sig_time = time.perf_counter() - t0
+            stub = dict(
+                dataset=DISPLAY_NAMES[ds], N=N, n_features=dim,
+                is_N_star=False, n_star_at_cap=0, cap_reason="",
+            )
+            try:
+                t0 = time.perf_counter()
+                X_train_f = compute_signatures(train_list, N)
+                X_test_f = compute_signatures(test_list, N)
+                sig_time = time.perf_counter() - t0
+            except MemoryError:
+                # Only memory errors are tolerated; anything else stops the script.
+                logger.warning(
+                    "  N=%d skipped: MemoryError in the signatures "
+                    "(rows written as NaN for both models)", N,
+                )
+                for model_name, _, _ in MODELS:
+                    rows.append({**stub, **_nan_metrics(), "model": model_name,
+                                 "feat_time_s": np.nan})
+                continue
             logger.info(
                 "  N=%d (sig_dim=%d, sig_time=%.1fs):",
                 N, X_train_f.shape[1], sig_time,
             )
-            evaluated_N.append(N)
             for model_name, penalty, solver in MODELS:
-                metrics, y_pred = fit_evaluate(
-                    X_train_f, y_train, X_test_f, y_test, penalty, solver
-                )
-                metrics.update(
-                    dataset=DISPLAY_NAMES[ds], model=model_name, N=N,
-                    feat_time_s=sig_time, is_N_star=False, n_star_at_cap=0,
-                    cap_reason="",
-                )
+                try:
+                    metrics, y_pred = fit_evaluate(
+                        X_train_f, y_train, X_test_f, y_test, penalty, solver
+                    )
+                except MemoryError:
+                    logger.warning(
+                        "    %s N=%d skipped: MemoryError (row written as NaN)",
+                        MODEL_LABELS[model_name], N,
+                    )
+                    rows.append({**stub, **_nan_metrics(), "model": model_name,
+                                 "feat_time_s": sig_time})
+                    continue
+                metrics.update(stub, model=model_name, feat_time_s=sig_time)
                 rows.append(metrics)
+                fitted_N[model_name].append(N)
                 pred_rows.append(pd.DataFrame({
                     "dataset": DISPLAY_NAMES[ds],
                     "model":   model_name,
@@ -314,13 +353,21 @@ def run_experiment() -> Tuple[
                     best_cv[model_name] = cv
                     best_N[model_name] = N
         optimal_N[ds] = best_N
-        if evaluated_N:
-            # Largest N evaluated: the end of N_RANGE, or the last depth
-            # within MAX_FEATURE_DIM.
-            N_max = max(evaluated_N)
-            reason = "n_range" if N_max == N_RANGE[-1] else "max_feature_dim"
+        for model_name, _, _ in MODELS:
+            if best_N[model_name] is None:
+                continue
+            # Largest N fitted for this model: the end of N_RANGE, the last
+            # depth within MAX_FEATURE_DIM, or the depth before a MemoryError.
+            N_max = max(fitted_N[model_name])
+            if N_max == N_RANGE[-1]:
+                reason = "n_range"
+            elif sig_dim(d_aug, N_max + 1) > MAX_FEATURE_DIM:
+                reason = "max_feature_dim"
+            else:
+                reason = "fit_failed"   # the next depth raised MemoryError
             for r in rows:
-                if r["dataset"] == DISPLAY_NAMES[ds] and r["N"] == best_N[r["model"]]:
+                if (r["dataset"] == DISPLAY_NAMES[ds] and r["model"] == model_name
+                        and r["N"] == best_N[model_name]):
                     r["is_N_star"] = True
                     if r["N"] == N_max:
                         r["n_star_at_cap"] = 1
@@ -338,7 +385,25 @@ def run_experiment() -> Tuple[
          "is_N_star", "n_star_at_cap", "cap_reason",
          "n_convergence_warnings", "c_at_grid_edge"]
     ]
-    return df, pd.concat(pred_rows, ignore_index=True), optimal_N
+    preds = pd.concat(pred_rows, ignore_index=True) if pred_rows else pd.DataFrame()
+    return df, preds, optimal_N
+
+
+def selection_problems(
+    df: pd.DataFrame, optimal_N: Dict[str, Dict[str, Optional[int]]]
+) -> List[str]:
+    """N* rows that are missing or NaN, one message per (dataset, model)."""
+    problems = []
+    for ds in DATASETS:
+        for model_name, _, _ in MODELS:
+            star = df[(df.dataset == DISPLAY_NAMES[ds]) & (df.model == model_name)
+                      & df.is_N_star]
+            if (optimal_N.get(ds, {}).get(model_name) is None or len(star) != 1
+                    or star[["cv_score", "accuracy"]].isna().any(axis=None)):
+                problems.append(
+                    f"{DISPLAY_NAMES[ds]} / {MODEL_LABELS[model_name]}: no valid N* row"
+                )
+    return problems
 
 
 def plot_results(
@@ -433,6 +498,7 @@ def save_results(
 
 def main() -> None:
     """Run signature × LR grid, then save CSV / PNG / N* files."""
+    log_versions(logger)
     logger.info(
         "Running signature+LR experiment (N=%d..%d)...", N_RANGE[0], N_RANGE[-1]
     )
@@ -449,6 +515,15 @@ def main() -> None:
                 "N* [%s / %s] = %s",
                 DISPLAY_NAMES[ds], MODEL_LABELS[model_name], N,
             )
+    logger.info(
+        "Rows skipped for memory reasons (MemoryError, NaN in the CSV): %d",
+        int(df.cv_score.isna().sum()),
+    )
+    problems = selection_problems(df, optimal_N)
+    if problems:
+        for msg in problems:
+            logger.error("Selection incomplete: %s", msg)
+        sys.exit(1)
     logger.info("Done.")
 
 

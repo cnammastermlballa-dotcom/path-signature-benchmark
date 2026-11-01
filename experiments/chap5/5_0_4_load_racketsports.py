@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from runinfo import log_versions
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -196,6 +198,7 @@ def save_results(results: pd.DataFrame, fig: plt.Figure, name: str) -> None:
 
 def main() -> None:
     """Run full experiment pipeline."""
+    log_versions(logger)
     logger.info("Loading data...")
     X_train, y_train, X_test, y_test = load_data()
 

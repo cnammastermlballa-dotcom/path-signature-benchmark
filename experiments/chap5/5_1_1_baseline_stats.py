@@ -53,6 +53,8 @@ warnings.filterwarnings(
     category=FutureWarning,
 )
 
+from runinfo import log_versions
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -338,6 +340,7 @@ def save_results(
 
 def main() -> None:
     """Run full baseline experiment."""
+    log_versions(logger)
     logger.info("Running baseline stats experiment...")
     logger.info("CPU cores available: %s (os.cpu_count()); GridSearchCV n_jobs=-1", os.cpu_count())
     warm_up()

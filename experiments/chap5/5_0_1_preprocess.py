@@ -43,6 +43,8 @@ import numpy as np
 import pandas as pd
 from sktime.datasets import load_UCR_UEA_dataset
 
+from runinfo import log_versions
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -300,6 +302,7 @@ def validate() -> None:
 
 def main() -> None:
     """Run full preprocessing pipeline."""
+    log_versions(logger)
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     logger.info("--- ECG200 ---")

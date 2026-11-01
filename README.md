@@ -40,6 +40,23 @@ pip install -r requirements.txt
 
 `torch` is only needed for Axe 3 (`5_4_1_rformer.py`).
 
+### Versions
+
+The thesis results were produced with:
+
+| Package | Version |
+|---------|---------|
+| Python | 3.11.17 |
+| numpy | 2.3.5 |
+| scikit-learn | 1.7.2 |
+| iisignature | 0.24 |
+| torch | ≥ 2.2 (Axe 3 only) |
+
+Every script logs these versions on its first line (`INFO — Versions: …`), so
+the run log records the environment of the run. Keep
+`scikit-learn==1.7.2`: LASSO uses liblinear, which fits one-vs-rest on
+multiclass data, and scikit-learn 1.8 and later raise an error on it.
+
 ## Running
 
 All scripts must be run **from the repository root** (they use relative paths).
