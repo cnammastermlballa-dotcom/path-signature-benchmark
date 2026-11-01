@@ -1,0 +1,11 @@
+metric,train,test
+n_series,180,180
+T,51,51
+d,24,24
+n_classes,6,6
+class_i_have_command_count,30,30
+class_all_clear_count,30,30
+class_not_clear_count,30,30
+class_spread_wings_count,30,30
+class_fold_wings_count,30,30
+class_lock_wings_count,30,30

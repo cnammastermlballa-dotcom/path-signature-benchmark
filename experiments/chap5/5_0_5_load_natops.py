@@ -1,13 +1,16 @@
 """
-Experiment 5.1.4 — Load, explore and visualize NATOPS.
+Experiment 5.0.5 — Load, explore and visualize NATOPS.
 
 Chapter 5, Section 5.1: Datasets
 Dataset: NATOPS Gestures (UEA multivariate archive, Bagnall et al. 2018)
          Naval Air Training and Operating Procedures Standardization gestures.
          8 sensors × 3 coordinates = 24 channels, 6 gesture classes.
+         Channel order (dataset description, NATOPS.txt): hand tip left,
+         hand tip right, elbow left, elbow right, wrist left, wrist right,
+         thumb left, thumb right, each as (x, y, z).
 Input:  data/processed/natops_{X,y}_{train,test}.npy
-Output: results/chap5/5_1_4_load_natops.csv
-        results/chap5/5_1_4_load_natops.png
+Output: results/chap5/5_0_5_load_natops.csv
+        results/chap5/5_0_5_load_natops.png
 """
 
 import logging
@@ -24,16 +27,23 @@ logger = logging.getLogger(__name__)
 RANDOM_STATE = 42
 PROCESSED_DIR = Path("data/processed")
 RESULTS_DIR = Path("results/chap5")
-NAME = "5_1_4_load_natops"
+NAME = "5_0_5_load_natops"
 
-N_CLASSES = 6
-CLASS_LABELS = [f"class {i}" for i in range(N_CLASSES)]
+# Labels 0..5 follow the encoding of 5_0_1_preprocess.py ('1.0'..'6.0' → 0..5).
+# Gesture names from the dataset description (NATOPS.txt).
+CLASS_NAMES = ["i_have_command", "all_clear", "not_clear",
+               "spread_wings", "fold_wings", "lock_wings"]
+CLASS_LABELS_PLOT = ["« J'ai le\ncommandement »", "« Voie libre »",
+                     "« Voie non\nlibre »", "« Déployer\nles ailes »",
+                     "« Replier\nles ailes »", "« Verrouiller\nles ailes »"]
+N_CLASSES = len(CLASS_NAMES)
 
-# Only the first sensor's 3 coordinates are plotted to keep the figure readable
-# (24 overlaid curves would be visually unusable).
-SENSOR1_CHANNELS = [("sensor1-x", 0, "red"),
-                    ("sensor1-y", 1, "blue"),
-                    ("sensor1-z", 2, "green")]
+# Only the right hand tip (channels 3..5) is plotted to keep the figure readable
+# (24 overlaid curves would be visually unusable). The right hand moves in all
+# 6 gestures; the left hand is almost still in the first three.
+PLOTTED_CHANNELS = [("main droite-x", 3, "red"),
+                    ("main droite-y", 4, "blue"),
+                    ("main droite-z", 5, "green")]
 
 
 def load_data() -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -86,9 +96,10 @@ def run_experiment(
         {"metric": "n_classes", "train": n_classes, "test": n_classes},
     ]
     for cls in classes:
+        label = CLASS_NAMES[int(cls)] if int(cls) < len(CLASS_NAMES) else str(cls)
         rows.append(
             {
-                "metric": f"class_{int(cls)}_count",
+                "metric": f"class_{label}_count",
                 "train": int(np.sum(y_train == cls)),
                 "test": int(np.sum(y_test == cls)),
             }
@@ -104,7 +115,7 @@ def run_experiment(
 
 
 def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
-    """Plot 2 sample gestures per class with sensor 1's (x, y, z) overlaid.
+    """Plot 2 sample gestures per class with the right hand tip's (x, y, z) overlaid.
 
     Args:
         X_train: Train series, shape (n_train, T, 24).
@@ -125,7 +136,8 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
         sharey=True,
     )
     fig.suptitle(
-        "NATOPS — sample gestures per class (sensor 1: x, y, z overlaid)",
+        "NATOPS — exemples de gestes par classe (extrémité de la main droite : "
+        "x, y, z superposés)",
         fontsize=13, y=0.98,
     )
 
@@ -140,7 +152,7 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
         )
         for col_idx, idx in enumerate(chosen):
             ax = axes[row_idx, col_idx]
-            for name, dim, color in SENSOR1_CHANNELS:
+            for name, dim, color in PLOTTED_CHANNELS:
                 ax.plot(X_train[idx, :, dim], color=color, linewidth=1.0)
             ax.set_xticks([])
             ax.set_yticks([])
@@ -148,14 +160,14 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
                 spine.set_visible(False)
             if col_idx == 0:
                 ax.set_ylabel(
-                    CLASS_LABELS[cls], fontsize=10, rotation=90, labelpad=8
+                    CLASS_LABELS_PLOT[cls], fontsize=9, rotation=90, labelpad=8
                 )
             if row_idx == 0:
-                ax.set_title(f"sample {col_idx + 1}", fontsize=9)
+                ax.set_title(f"exemple {col_idx + 1}", fontsize=9)
 
     handles = [
         plt.Line2D([0], [0], color=color, linewidth=1.5, label=name)
-        for name, _, color in SENSOR1_CHANNELS
+        for name, _, color in PLOTTED_CHANNELS
     ]
     fig.legend(
         handles=handles,

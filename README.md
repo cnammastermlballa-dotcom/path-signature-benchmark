@@ -64,7 +64,7 @@ Measured on a laptop CPU (Intel i5-6300U, 2 cores / 4 threads):
 
 | Step | Time |
 |------|------|
-| `5_0`, `5_1_*`, `5_2_1` (preprocessing, exploration, baseline) | ~ 2 min |
+| `5_0_*`, `5_2_1` (preprocessing, exploration, baseline) | ~ 2 min |
 | `5_2_2` signature + LR, N=1..10 (CharTraj ≈ 95 % of it) | ~ 45–50 min |
 | `5_3_1` augmentations | ~ 30–35 min |
 | `5_5_1` synthesis | < 1 min |
@@ -99,7 +99,7 @@ Or a single script, e.g.:
 python experiments/chap5/5_2_2_signature_lr.py
 ```
 
-Script order matters: `5_0` produces `data/processed/` (already committed, so it
+Script order matters: `5_0_1` produces `data/processed/` (already committed, so it
 can be skipped), `5_2_2` writes `optimal_N_*.txt` used by `5_3_1` and `5_4_1`,
 `5_3_1` writes `best_config_*.txt`, and `5_5_1` aggregates all CSVs.
 To run a later script alone without rerunning the earlier ones, seed its
@@ -154,8 +154,8 @@ Timings depend on hardware.
 ## Repository layout
 
 ```
-experiments/chap5/   experiment scripts (5_0 … 5_5_1)
-data/processed/      numpy arrays produced by 5_0_preprocess.py
+experiments/chap5/   experiment scripts (5_0_1 … 5_5_1)
+data/processed/      numpy arrays produced by 5_0_1_preprocess.py
 results/reference/   reference results of the thesis (committed)
 results/chap5/       your run's outputs (git-ignored, created by the scripts)
 notebooks/           Colab notebook for the Axe 3 GPU run

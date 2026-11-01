@@ -1,5 +1,5 @@
 """
-Experiment 5.1.3 — Load, explore and visualize RacketSports.
+Experiment 5.0.4 — Load, explore and visualize RacketSports.
 
 Chapter 5, Section 5.1: Datasets
 Dataset: RacketSports (UEA multivariate archive, Bagnall et al. 2018)
@@ -7,8 +7,8 @@ Dataset: RacketSports (UEA multivariate archive, Bagnall et al. 2018)
          gyroscope, 6 channels, 4 racket-stroke classes (badminton clear /
          smash, squash backhand / forehand boast).
 Input:  data/processed/racketsports_{X,y}_{train,test}.npy
-Output: results/chap5/5_1_3_load_racketsports.csv
-        results/chap5/5_1_3_load_racketsports.png
+Output: results/chap5/5_0_4_load_racketsports.csv
+        results/chap5/5_0_4_load_racketsports.png
 """
 
 import logging
@@ -25,16 +25,16 @@ logger = logging.getLogger(__name__)
 RANDOM_STATE = 42
 PROCESSED_DIR = Path("data/processed")
 RESULTS_DIR = Path("results/chap5")
-NAME = "5_1_3_load_racketsports"
+NAME = "5_0_4_load_racketsports"
 
-# Labels 0..3 follow the sorted class-string encoding used in 5_0_preprocess.py:
+# Labels 0..3 follow the sorted class-string encoding used in 5_0_1_preprocess.py:
 # 0=badminton_clear, 1=badminton_smash, 2=squash_backhandboast, 3=squash_forehandboast.
 CLASS_NAMES = ["bad_clear", "bad_smash", "squash_bh", "squash_fh"]
-CLASS_LABELS_PLOT = ["badminton\nclear", "badminton\nsmash",
-                     "squash\nbackhand", "squash\nforehand"]
+CLASS_LABELS_PLOT = ["badminton\ndégagé", "badminton\nsmash",
+                     "squash\nrevers", "squash\ncoup droit"]
 
 # 6 channels overlaid on each subplot.
-CHANNEL_NAMES = ["accel-x", "accel-y", "accel-z", "gyro-x", "gyro-y", "gyro-z"]
+CHANNEL_NAMES = ["accél-x", "accél-y", "accél-z", "gyro-x", "gyro-y", "gyro-z"]
 CHANNEL_COLORS = ["red", "blue", "green", "orange", "purple", "brown"]
 
 
@@ -128,7 +128,7 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
         sharey=True,
     )
     fig.suptitle(
-        "RacketSports — sample time series per class (6 dimensions overlaid)",
+        "RacketSports — exemples de séries temporelles par classe (6 dimensions superposées)",
         fontsize=13, y=0.98,
     )
 
@@ -159,7 +159,7 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
                     CLASS_LABELS_PLOT[cls], fontsize=9, rotation=90, labelpad=8
                 )
             if row_idx == 0:
-                ax.set_title(f"sample {col_idx + 1}", fontsize=9)
+                ax.set_title(f"exemple {col_idx + 1}", fontsize=9)
 
     handles = [
         plt.Line2D([0], [0], color=color, linewidth=1.5, label=name)

@@ -1,25 +1,30 @@
 """
-Experiment 5.0 — Preprocessing: load raw datasets and save to data/processed/.
+Experiment 5.0.1 — Preprocessing: load raw datasets and save to data/processed/.
 
-This script is the single entry point for all Chapter 5 scripts.
+First stage of the Chapter 5 pipeline: every later script reads the files
+written here (committed, so this step can be skipped on a fresh clone).
 No model fitting, no visualisation — preprocessing only.
 
-Label encoding (documented for confusion matrices in chap5):
-  ECG200            : '-1' → 0  (abnormal),  '1' → 1  (normal)
-  CharacterTrajector: '1'..'20' → 0..19  (sorted lexicographic → numeric order)
-  RacketSports      : sorted class strings → 0..3
-  NATOPS            : '1.0'..'6.0' → 0..5
+Label encoding (raw UCR/UEA class labels → 0..K-1):
+  ECG200                : '-1' → 0 (abnormal), '1' → 1 (normal)
+  CharacterTrajectories : '1'..'20' → 0..19, sorted numerically (a lexicographic
+                          sort would put '10' after '1'); class 0 = 'a', the
+                          letters being a b c d e g h l m n o p q r s u v w y z
+  RacketSports          : sorted class strings → 0 = Badminton_Clear,
+                          1 = Badminton_Smash, 2 = Squash_BackhandBoast,
+                          3 = Squash_ForehandBoast
+  NATOPS                : '1.0'..'6.0' → 0..5
 
-Chapter 5: Datasets and Representations
+Chapter 5, Section 5.1: Datasets
 Output: data/processed/
           ecg200_X_train.npy         shape (100, 96)
           ecg200_X_test.npy          shape (100, 96)
           ecg200_y_train.npy         shape (100,)
           ecg200_y_test.npy          shape (100,)
-          chartraj_X_train.npy       list of arrays (variable length, d=3)
-          chartraj_X_test.npy        list of arrays (variable length, d=3)
-          chartraj_y_train.npy       shape (n_train,)
-          chartraj_y_test.npy        shape (n_test,)
+          chartraj_X_train.npy       object array of 1422 (T_i, 3) arrays, T_i ∈ [60, 180]
+          chartraj_X_test.npy        object array of 1436 (T_i, 3) arrays, T_i ∈ [61, 182]
+          chartraj_y_train.npy       shape (1422,)
+          chartraj_y_test.npy        shape (1436,)
           racketsports_X_train.npy   shape (151, 30, 6)
           racketsports_X_test.npy    shape (152, 30, 6)
           racketsports_y_train.npy   shape (151,)
@@ -135,8 +140,13 @@ def preprocess_chartraj() -> None:
     logger.info("Loading CharacterTrajectories test...")
     X_test, y_test = load_chartraj("test")
 
+    assert len(X_train) == 1422, f"Expected 1422 train series, got {len(X_train)}"
+    assert len(X_test) == 1436,  f"Expected 1436 test series, got {len(X_test)}"
     assert all(x.shape[1] == 3 for x in X_train), "Expected d=3 for all train series"
     assert all(x.shape[1] == 3 for x in X_test),  "Expected d=3 for all test series"
+    # Some UEA releases pad variable-length series with NaN: it must not leak in.
+    assert not any(np.isnan(x).any() for x in X_train), "NaN in CharTraj train"
+    assert not any(np.isnan(x).any() for x in X_test),  "NaN in CharTraj test"
     assert len(np.unique(y_train)) == 20, "Expected 20 classes in train"
     assert len(np.unique(y_test))  == 20, "Expected 20 classes in test"
 
@@ -155,14 +165,14 @@ def preprocess_chartraj() -> None:
 
 
 # ---------------------------------------------------------------------------
-# UEA fixed-length loader (BasicMotions, NATOPS)
+# UEA fixed-length loader (RacketSports, NATOPS)
 # ---------------------------------------------------------------------------
 
 def load_uea_fixed(name: str, split: str) -> Tuple[np.ndarray, np.ndarray]:
     """Load one split of a fixed-length UEA multivariate dataset via sktime.
 
     Args:
-        name: UEA dataset name (e.g. 'BasicMotions', 'NATOPS').
+        name: UEA dataset name ('RacketSports' or 'NATOPS').
         split: 'train' or 'test'.
 
     Returns:
@@ -190,11 +200,8 @@ def preprocess_racketsports() -> None:
     logger.info("Loading RacketSports test...")
     X_test, y_test = load_uea_fixed("RacketSports", "test")
 
-    assert X_train.ndim == 3 and X_train.shape[1] == 30, \
-        f"Expected shape (n, 30, d), got {X_train.shape}"
-    assert X_test.ndim == 3 and X_test.shape[1] == 30, \
-        f"Expected shape (n, 30, d), got {X_test.shape}"
-    assert X_train.shape[2] == X_test.shape[2], "d mismatch train/test"
+    assert X_train.shape == (151, 30, 6), f"Unexpected shape: {X_train.shape}"
+    assert X_test.shape == (152, 30, 6),  f"Unexpected shape: {X_test.shape}"
     assert not np.isnan(X_train).any(), "NaN in RacketSports train"
     assert not np.isnan(X_test).any(),  "NaN in RacketSports test"
     assert len(np.unique(y_train)) == 4, "Expected 4 classes in train"
@@ -216,11 +223,8 @@ def preprocess_natops() -> None:
     logger.info("Loading NATOPS test...")
     X_test, y_test = load_uea_fixed("NATOPS", "test")
 
-    assert X_train.ndim == 3 and X_train.shape[1] == 51, \
-        f"Expected shape (n, 51, d), got {X_train.shape}"
-    assert X_test.ndim == 3 and X_test.shape[1] == 51, \
-        f"Expected shape (n, 51, d), got {X_test.shape}"
-    assert X_train.shape[2] == X_test.shape[2], "d mismatch train/test"
+    assert X_train.shape == (180, 51, 24), f"Unexpected shape: {X_train.shape}"
+    assert X_test.shape == (180, 51, 24),  f"Unexpected shape: {X_test.shape}"
     assert not np.isnan(X_train).any(), "NaN in NATOPS train"
     assert not np.isnan(X_test).any(),  "NaN in NATOPS test"
     assert len(np.unique(y_train)) == 6, "Expected 6 classes in train"
@@ -238,7 +242,7 @@ def preprocess_natops() -> None:
 # ---------------------------------------------------------------------------
 
 def validate() -> None:
-    """Reload saved files and print a final summary."""
+    """Reload the saved files, check their shapes and label ranges, and log a summary."""
     logger.info("Validating saved files...")
 
     ecg_Xtr = np.load(PROCESSED_DIR / "ecg200_X_train.npy")
@@ -259,28 +263,35 @@ def validate() -> None:
 
     ct_lengths_tr = [x.shape[0] for x in ct_Xtr]
 
-    print()
-    print("=== Preprocessing summary ===")
-    print(
-        f"Dataset ECG200: n_train={ecg_Xtr.shape[0]}, n_test={ecg_Xte.shape[0]}, "
-        f"T={ecg_Xtr.shape[1]}, d=1, n_classes={len(np.unique(ecg_ytr))}"
+    # Saved files must reload with the shapes and labels 0..K-1 checked above.
+    assert ecg_Xtr.shape == (100, 96) and ecg_Xte.shape == (100, 96)
+    assert len(ct_Xtr) == 1422 and len(ct_Xte) == 1436
+    assert rs_Xtr.shape == (151, 30, 6) and rs_Xte.shape == (152, 30, 6)
+    assert na_Xtr.shape == (180, 51, 24) and na_Xte.shape == (180, 51, 24)
+    for y, K in [(ecg_ytr, 2), (ct_ytr, 20), (rs_ytr, 4), (na_ytr, 6)]:
+        assert np.array_equal(np.unique(y), np.arange(K)), "labels not 0..K-1"
+
+    logger.info("=== Preprocessing summary ===")
+    logger.info(
+        "ECG200: n_train=%d, n_test=%d, T=%d, d=1, n_classes=%d",
+        ecg_Xtr.shape[0], ecg_Xte.shape[0], ecg_Xtr.shape[1], len(np.unique(ecg_ytr)),
     )
-    print(
-        f"Dataset CharacterTrajectories: n_train={len(ct_Xtr)}, n_test={len(ct_Xte)}, "
-        f"T=[{min(ct_lengths_tr)}, {max(ct_lengths_tr)}] (variable), "
-        f"d={ct_Xtr[0].shape[1]}, n_classes={len(np.unique(ct_ytr))}"
+    logger.info(
+        "CharacterTrajectories: n_train=%d, n_test=%d, T=[%d, %d] (variable), "
+        "d=%d, n_classes=%d",
+        len(ct_Xtr), len(ct_Xte), min(ct_lengths_tr), max(ct_lengths_tr),
+        ct_Xtr[0].shape[1], len(np.unique(ct_ytr)),
     )
-    print(
-        f"Dataset RacketSports: n_train={rs_Xtr.shape[0]}, n_test={rs_Xte.shape[0]}, "
-        f"T={rs_Xtr.shape[1]}, d={rs_Xtr.shape[2]}, "
-        f"n_classes={len(np.unique(rs_ytr))}"
+    logger.info(
+        "RacketSports: n_train=%d, n_test=%d, T=%d, d=%d, n_classes=%d",
+        rs_Xtr.shape[0], rs_Xte.shape[0], rs_Xtr.shape[1], rs_Xtr.shape[2],
+        len(np.unique(rs_ytr)),
     )
-    print(
-        f"Dataset NATOPS: n_train={na_Xtr.shape[0]}, n_test={na_Xte.shape[0]}, "
-        f"T={na_Xtr.shape[1]}, d={na_Xtr.shape[2]}, "
-        f"n_classes={len(np.unique(na_ytr))}"
+    logger.info(
+        "NATOPS: n_train=%d, n_test=%d, T=%d, d=%d, n_classes=%d",
+        na_Xtr.shape[0], na_Xte.shape[0], na_Xtr.shape[1], na_Xtr.shape[2],
+        len(np.unique(na_ytr)),
     )
-    print("==============================")
 
 
 # ---------------------------------------------------------------------------

@@ -1,13 +1,13 @@
 """
-Experiment 5.1.2 — Load, explore and visualize CharacterTrajectories.
+Experiment 5.0.3 — Load, explore and visualize CharacterTrajectories.
 
 Chapter 5, Section 5.1: Datasets
 Dataset: CharacterTrajectories (UEA multivariate archive via sktime).
          Pen trajectories with 3 channels (x-velocity, y-velocity, pen force),
          20 character classes, variable-length series.
 Input:  data/processed/chartraj_{X,y}_{train,test}.npy
-Output: results/chap5/5_1_2_load_chartraj.csv
-        results/chap5/5_1_2_load_chartraj.png
+Output: results/chap5/5_0_3_load_chartraj.csv
+        results/chap5/5_0_3_load_chartraj.png
 """
 
 import logging
@@ -24,15 +24,15 @@ logger = logging.getLogger(__name__)
 RANDOM_STATE = 42
 PROCESSED_DIR = Path("data/processed")
 RESULTS_DIR = Path("results/chap5")
-NAME = "5_1_2_load_chartraj"
+NAME = "5_0_3_load_chartraj"
 
-# 3 channels: x velocity, y velocity, pen tip force.
-N_CHANNELS = 3
-CHANNEL_NAMES = ["x-vel", "y-vel", "pen-force"]
+# 3 channels: x velocity, y velocity, pen tip force. The figure integrates the
+# two velocities (cumulative sum) to recover the pen trajectory, i.e. the letter.
 
 # UCI CharacterTrajectories 20-character subset (excludes f, i, j, k, t, x —
 # characters that cannot be written without lifting the pen). Ordered to
-# match the preprocessor's sorted string→int label encoding (class 0 = 'a').
+# match 5_0_1_preprocess.py, which sorts the raw labels '1'..'20' numerically
+# (class 0 = 'a').
 CLASS_NAMES = list("abcdeghlmnopqrsuvwyz")
 
 
@@ -112,7 +112,10 @@ def run_experiment(
 
 
 def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
-    """Plot 3 sample 2-D pen paths (x-vel vs y-vel) per class from train.
+    """Plot 3 sample pen trajectories per class from train.
+
+    The trajectory is the cumulative sum of the (x, y) velocity channels, so
+    each panel shows the written letter (pen force is not plotted).
 
     Args:
         X_train: Object array of (T_i, 3) arrays.
@@ -133,8 +136,8 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
         squeeze=False,
     )
     fig.suptitle(
-        "CharacterTrajectories — 2-D pen path samples per class\n"
-        "(x-velocity vs y-velocity)",
+        "CharacterTrajectories — exemples de trajectoires du stylo par classe\n"
+        "(somme cumulée des vitesses en x et en y)",
         fontsize=13, y=1.005,
     )
 
@@ -149,7 +152,7 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
         )
         for col_idx, idx in enumerate(chosen):
             ax = axes[row_idx, col_idx]
-            traj = X_train[idx]
+            traj = np.cumsum(X_train[idx][:, :2], axis=0)
             ax.plot(traj[:, 0], traj[:, 1], color=colors[row_idx], linewidth=1.0)
             ax.set_xticks([])
             ax.set_yticks([])
@@ -160,7 +163,7 @@ def plot_results(X_train: np.ndarray, y_train: np.ndarray) -> plt.Figure:
                     fontsize=8, rotation=0, labelpad=22,
                 )
             if row_idx == 0:
-                ax.set_title(f"sample {col_idx + 1}", fontsize=8)
+                ax.set_title(f"exemple {col_idx + 1}", fontsize=8)
 
     fig.tight_layout()
     return fig

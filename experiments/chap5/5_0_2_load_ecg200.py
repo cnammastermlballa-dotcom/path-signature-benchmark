@@ -1,15 +1,15 @@
 """
-Experiment 5.1.1 — Load, explore and visualize ECG200.
+Experiment 5.0.2 — Load, explore and visualize ECG200.
 
 Chapter 5, Section 5.1: Datasets
-Dataset: ECG200 (UCR Time Series Archive)
-Output: results/chap5/5_1_1_load_ecg200.csv
-        results/chap5/5_1_1_load_ecg200.png
+Dataset: ECG200 (UCR Time Series Archive). Univariate heartbeats (T=96),
+         2 classes: 0 = abnormal (raw label -1), 1 = normal (raw label 1).
+Input:  data/processed/ecg200_{X,y}_{train,test}.npy
+Output: results/chap5/5_0_2_load_ecg200.csv
+        results/chap5/5_0_2_load_ecg200.png
 """
 
 import logging
-import urllib.request
-import zipfile
 from pathlib import Path
 from typing import Tuple
 
@@ -21,73 +21,29 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s — %(message)s")
 logger = logging.getLogger(__name__)
 
 RANDOM_STATE = 42
+PROCESSED_DIR = Path("data/processed")
 RESULTS_DIR = Path("results/chap5")
-DATA_DIR = Path("data/raw/ECG200")
-UCR_URL = (
-    "https://www.timeseriesclassification.com/aeon-toolkit/ECG200.zip"
-)
+NAME = "5_0_2_load_ecg200"
 
-
-def download_ecg200() -> None:
-    """Download ECG200 from the UCR archive if not already present."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    train_file = DATA_DIR / "ECG200_TRAIN.txt"
-    if train_file.exists():
-        logger.info("ECG200 already downloaded, skipping.")
-        return
-    zip_path = DATA_DIR / "ECG200.zip"
-    logger.info("Downloading ECG200...")
-    urllib.request.urlretrieve(UCR_URL, zip_path)
-    logger.info("Extracting archive...")
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(DATA_DIR)
-    zip_path.unlink()
-    logger.info("ECG200 downloaded and extracted.")
-
-
-def _parse_ucr_file(path: Path) -> Tuple[np.ndarray, np.ndarray]:
-    """Parse a UCR .txt file (label in first column).
-
-    Args:
-        path: Path to the UCR text file.
-
-    Returns:
-        X: Time series array of shape (n_samples, length).
-        y: Label array of shape (n_samples,).
-    """
-    data = np.loadtxt(path)
-    y = data[:, 0].astype(int)
-    X = data[:, 1:]
-    return X, y
+# Labels 0..1 follow the encoding of 5_0_1_preprocess.py ('-1' → 0, '1' → 1).
+CLASS_LABELS_PLOT = ["Anormal (−1)", "Normal (+1)"]
+CLASS_COLORS = ["#d62728", "#1f77b4"]
 
 
 def load_data() -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Load ECG200 train and test splits.
+    """Load ECG200 train and test splits from data/processed/.
 
     Returns:
         X_train: Train time series, shape (100, 96).
-        y_train: Train labels, shape (100,).
+        y_train: Train labels (0..1), shape (100,).
         X_test:  Test time series, shape (100, 96).
-        y_test:  Test labels, shape (100,).
+        y_test:  Test labels (0..1), shape (100,).
     """
-    download_ecg200()
-    # Locate files regardless of nesting introduced by zip extraction
-    train_candidates = list(DATA_DIR.rglob("ECG200_TRAIN.txt")) + list(
-        DATA_DIR.rglob("ECG200_TRAIN.tsv")
-    )
-    test_candidates = list(DATA_DIR.rglob("ECG200_TEST.txt")) + list(
-        DATA_DIR.rglob("ECG200_TEST.tsv")
-    )
-    if not train_candidates or not test_candidates:
-        raise FileNotFoundError(
-            f"Could not find ECG200 data files under {DATA_DIR}. "
-            "Check the download or extract manually."
-        )
-    X_train, y_train = _parse_ucr_file(train_candidates[0])
-    X_test, y_test = _parse_ucr_file(test_candidates[0])
-    logger.info(
-        "Loaded ECG200: train %s, test %s", X_train.shape, X_test.shape
-    )
+    X_train = np.load(PROCESSED_DIR / "ecg200_X_train.npy")
+    X_test = np.load(PROCESSED_DIR / "ecg200_X_test.npy")
+    y_train = np.load(PROCESSED_DIR / "ecg200_y_train.npy")
+    y_test = np.load(PROCESSED_DIR / "ecg200_y_test.npy")
+    logger.info("Loaded ECG200: X_train %s, X_test %s", X_train.shape, X_test.shape)
     return X_train, y_train, X_test, y_test
 
 
@@ -106,8 +62,8 @@ def run_experiment(
         y_test:  Test labels.
 
     Returns:
-        DataFrame with columns [metric, train, test]. Rows: n_train, n_test,
-        T, d, n_classes, and one row per class holding sample counts.
+        DataFrame with columns [metric, train, test]. Rows: n_series, T, d,
+        n_classes, and one row per class holding sample counts.
     """
     classes = np.unique(np.concatenate([y_train, y_test]))
     n_classes = len(classes)
@@ -158,23 +114,20 @@ def plot_results(
         sharex=True,
         sharey=True,
     )
-    fig.suptitle("ECG200 — sample time series per class", fontsize=14, y=1.01)
-
-    colors = {classes[0]: "#d62728", classes[1]: "#1f77b4"}
-    label_map = {classes[0]: "Abnormal (−1)", classes[1]: "Normal (+1)"}
+    fig.suptitle("ECG200 — exemples de séries temporelles par classe", fontsize=14, y=1.01)
 
     for row_idx, cls in enumerate(classes):
         indices = np.where(y_train == cls)[0]
         chosen = rng.choice(indices, size=n_samples_per_class, replace=False)
         for col_idx, idx in enumerate(chosen):
             ax = axes[row_idx, col_idx]
-            ax.plot(X_train[idx], color=colors[cls], linewidth=1.2)
+            ax.plot(X_train[idx], color=CLASS_COLORS[cls], linewidth=1.2)
             ax.set_xticks([])
             ax.set_yticks([])
             if col_idx == 0:
-                ax.set_ylabel(label_map[cls], fontsize=9)
+                ax.set_ylabel(CLASS_LABELS_PLOT[cls], fontsize=9)
             if row_idx == 0:
-                ax.set_title(f"sample {col_idx + 1}", fontsize=8)
+                ax.set_title(f"exemple {col_idx + 1}", fontsize=8)
 
     fig.tight_layout()
     return fig
@@ -208,7 +161,7 @@ def main() -> None:
     fig = plot_results(X_train, y_train)
 
     logger.info("Saving results...")
-    save_results(results, fig, "5_1_1_load_ecg200")
+    save_results(results, fig, NAME)
     plt.close(fig)
     logger.info("Done.")
 
