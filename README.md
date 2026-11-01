@@ -38,7 +38,7 @@ pip install numpy==2.3.5          # iisignature needs numpy at build time
 pip install -r requirements.txt
 ```
 
-`torch` is only needed for Axe 3 (`5_4_1_rformer.py`).
+`torch` is only needed for Axe 3 (`5_3_1_rformer.py`).
 
 ### Versions
 
@@ -50,7 +50,7 @@ The thesis results were produced with:
 | numpy | 2.3.5 |
 | scikit-learn | 1.7.2 |
 | iisignature | 0.24 |
-| torch | ≥ 2.2 (Axe 3 only) |
+| torch | 2.15.0+cpu (CPU build; Axe 3 only) |
 
 Every script logs these versions on its first line (`INFO — Versions: …`), so
 the run log records the environment of the run. Keep
@@ -137,7 +137,7 @@ Open `notebooks/demo_google_colab.ipynb` in Colab (Runtime → T4 GPU), or run:
 %cd path-signature-benchmark
 !pip install -q iisignature torch scikit-learn matplotlib pandas
 !mkdir -p results/chap5 && cp results/reference/chap5/optimal_N_*.txt results/chap5/
-!python experiments/chap5/5_4_1_rformer.py
+!python experiments/chap5/5_3_1_rformer.py
 ```
 
 ## Outputs

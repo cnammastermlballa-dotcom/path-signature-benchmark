@@ -24,7 +24,7 @@ run 5_1_1_baseline_stats.py
 run 5_1_2_signature_lr.py
 run 5_2_1_augmentations.py
 if $RUN_RFORMER; then
-    run 5_4_1_rformer.py
+    run 5_3_1_rformer.py
 else
     echo "=== 5_4_1_rformer.py skipped: copying reference RFormer results ==="
     cp results/reference/chap5/5_4_1_rformer.csv results/reference/chap5/5_4_1_rformer.png results/chap5/
