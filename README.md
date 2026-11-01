@@ -67,9 +67,10 @@ and shares its setup through `common.sh`:
   `path-sig-benchmark` environment is not active;
 - it checks that the files it needs from earlier stages exist, and otherwise
   names the script to run first;
-- it writes `results/chap5/<stage>_run.log` with the git commit (flagged if
-  the working tree has uncommitted changes), the start time and, on success,
-  the end time.
+- it writes `results/chap5/<stage>_run.log`: the git commit (flagged if the
+  working tree has uncommitted changes), the start time, the full output of
+  each script (versions line, per-N accuracy, CV scores, fit times, warnings),
+  and, on success, the end time.
 
 Run the stages in this order:
 
@@ -101,12 +102,8 @@ earlier `axe3.sh` run is present in `results/chap5/`; otherwise it is skipped.
 
 `run_all.sh` calls the five scripts in order and stops at the first error; the
 `=== 5_x_y_... ===` header above the Python traceback shows which script
-failed. Progress (per-N accuracy, CV scores, fit times) is only printed to the
-terminal. To also keep it in a file:
-
-```bash
-./run_all.sh 2>&1 | tee run_all.log
-```
+failed. Each stage's output is both printed and appended to its
+`results/chap5/<stage>_run.log`, so no `tee` is needed.
 
 A single Python script can still be run on its own from the repository root,
 e.g. `python experiments/chap5/5_1_2_signature_lr.py`, but without the

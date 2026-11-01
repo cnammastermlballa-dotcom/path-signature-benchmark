@@ -15,9 +15,13 @@ if ! python -c "import iisignature" 2>/dev/null; then
     exit 1
 fi
 
+# run <script>: runs one experiment script, printing its output and appending
+# it (stdout + stderr) to the stage log opened by start_log. -u: unbuffered,
+# so the log and the terminal follow the script live. The script's exit code
+# is kept (pipefail + set -e stop the stage if it fails).
 run() {
-    echo "=== $1 ==="
-    python "experiments/chap5/$1"
+    echo "=== $1 ===" | tee -a "$LOG_FILE"
+    python -u "experiments/chap5/$1" 2>&1 | tee -a "$LOG_FILE"
 }
 
 # require <script to run first> <file>...
