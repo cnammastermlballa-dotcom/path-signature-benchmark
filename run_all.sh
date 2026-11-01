@@ -1,34 +1,37 @@
 #!/usr/bin/env bash
-# Run the full Chapter 5 pipeline from the repository root.
-# Outputs go to results/chap5/ (git-ignored); reference results of the
-# thesis are in results/reference/chap5/.
-# Usage: ./run_all.sh            (CPU steps; copies reference RFormer results)
-#        ./run_all.sh --rformer  (also trains RFormer, GPU recommended)
+# Run the full Chapter 5 pipeline: the five stage scripts, in order.
+# Outputs go to results/chap5/ (git-ignored). Stops at the first error.
+#
+# Usage: ./run_all.sh [--skip-rformer]
+#   RFormer is trained by default (axe3.sh, on the CPU unless torch sees a GPU).
+#   --skip-rformer  skips axe3.sh (RFormer and its LASSO control). compare.sh
+#                   then runs only if results/chap5/5_3_1_rformer.csv is left
+#                   over from an earlier axe3.sh run.
 set -euo pipefail
 cd "$(dirname "$0")"
 
-RUN_RFORMER=false
-[[ "${1:-}" == "--rformer" ]] && RUN_RFORMER=true
+skip_rformer=false
+case "${1:-}" in
+    "") ;;
+    --skip-rformer) skip_rformer=true ;;
+    *) echo "Usage: $0 [--skip-rformer]" >&2; exit 2 ;;
+esac
 
-run() {
-    echo "=== $1 ==="
-    python "experiments/chap5/$1"
-}
-
-run 5_0_1_preprocess.py
-run 5_0_2_load_ecg200.py
-run 5_0_3_load_chartraj.py
-run 5_0_4_load_racketsports.py
-run 5_0_5_load_natops.py
-run 5_1_1_baseline_stats.py
-run 5_1_2_signature_lr.py
-run 5_2_1_augmentations.py
-if $RUN_RFORMER; then
-    run 5_3_1_rformer.py
+./data.sh
+./axe1.sh
+./axe2.sh
+if $skip_rformer; then
+    echo "=== axe3.sh skipped (--skip-rformer) ==="
 else
-    echo "=== 5_4_1_rformer.py skipped: copying reference RFormer results ==="
-    cp results/reference/chap5/5_4_1_rformer.csv results/reference/chap5/5_4_1_rformer.png results/chap5/
+    ./axe3.sh
 fi
-run 5_5_1_comparison.py
+if [[ -e results/chap5/5_3_1_rformer.csv ]]; then
+    if $skip_rformer; then
+        echo "Note: compare.sh uses 5_3_1_rformer.csv from an earlier axe3.sh run."
+    fi
+    ./compare.sh
+else
+    echo "=== compare.sh skipped: no results/chap5/5_3_1_rformer.csv (run ./axe3.sh) ==="
+fi
 
 echo "Done. Outputs in results/chap5/"

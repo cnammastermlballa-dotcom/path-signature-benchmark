@@ -4,8 +4,8 @@ pandas==2.3.3
 scipy==1.17.1
 scikit-learn==1.7.2
 matplotlib==3.10.8
-sktime==0.40.1
+sktime==1.2.0
 iisignature==0.24
 
-# Axe 3 only (5_4_1_rformer.py) — GPU recommended, see README
+# Axe 3 only (5_3_1_rformer.py) — runs on the CPU, no GPU needed
 torch>=2.2
