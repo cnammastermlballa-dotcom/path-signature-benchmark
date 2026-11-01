@@ -22,7 +22,7 @@ run 5_0_4_load_racketsports.py
 run 5_0_5_load_natops.py
 run 5_1_1_baseline_stats.py
 run 5_1_2_signature_lr.py
-run 5_3_1_augmentations.py
+run 5_2_1_augmentations.py
 if $RUN_RFORMER; then
     run 5_4_1_rformer.py
 else
