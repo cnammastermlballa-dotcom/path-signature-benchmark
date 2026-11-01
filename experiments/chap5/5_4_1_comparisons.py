@@ -623,7 +623,7 @@ def plot_results(df: pd.DataFrame) -> plt.Figure:
         0.5, -0.045,
         f"Barres d'erreur : IC bootstrap à {int(CI_LEVEL * 100)} % ({N_BOOT} rééchantillonnages "
         "du jeu de test, méthode des percentiles). RFormer : moyenne sur les graines et IC de "
-        "la moyenne. Coût mesuré sur le même CPU (i5-6300U).",
+        "la moyenne. Coût mesuré sur le même CPU (i5-7300U).",
         ha="center", fontsize=8,
     )
     fig.tight_layout()

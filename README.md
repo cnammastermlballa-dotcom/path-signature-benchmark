@@ -77,7 +77,7 @@ Run the stages in this order:
 | Script | Thesis section | Runtime |
 |--------|----------------|---------|
 | `./data.sh` | 5.1 | ~ 1–2 min |
-| `./axe1.sh` | 5.2 | ~ 45–50 min |
+| `./axe1.sh` | 5.2 | ~ 36 min |
 | `./axe2.sh` | 5.3 | ~ 90 min |
 | `./axe3.sh` | 5.4 | ~ 15 min |
 | `./compare.sh` | 5.5 | < 1 min |
@@ -85,11 +85,11 @@ Run the stages in this order:
 `axe2.sh` and `axe3.sh` are independent of each other: once `axe1.sh` has run,
 they can be launched in either order.
 
-Runtimes were measured on a laptop CPU (Intel i5-6300U, 2 cores / 4 threads); a
+Runtimes were measured on a laptop CPU (Intel i5-7300U, 2 cores / 4 threads); a
 faster machine will be quicker. Some single fits are long (e.g. the CharTraj
 LASSO fits, ~10 min), so a pause in the output does not mean the run is stuck.
 
-To run everything in one go (~2.5 h on the laptop above), including the
+To run everything in one go (~2.4 h on the laptop above), including the
 RFormer training:
 
 ```bash
@@ -144,8 +144,9 @@ prerequisite checks or the run log.
   - `5_1_2_signature_lr.{csv,png}`, `5_1_2_signature_lr_predictions.csv`
   - `optimal_N_{dataset}_{LR-L2,LR-L1}.txt`: N* for Ridge and for LASSO
   - `axe1_run.log`
-- **Runtime:** `5_1_1` < 1 min; `5_1_2` ~ 45–50 min (measured under the
-  previous protocol; CharTraj takes ~ 95 % of it).
+- **Runtime:** `5_1_1` < 1 min; `5_1_2` ~ 36 min (35.6 min measured on
+  2026-11-01 on an Intel i5-7300U, 2 cores / 4 threads; CharTraj takes
+  ~ 94 % of it).
 
 ### `axe2.sh` — path augmentations (section 5.3)
 
@@ -175,7 +176,7 @@ prerequisite checks or the run log.
 - **Runs:** `5_3_1_rformer.py`. It **trains a Transformer** (Rough Transformer
   on multi-view signatures, 5 seeds) on CharacterTrajectories and NATOPS, plus
   a LASSO control on the same flattened tokens. The thesis results are trained
-  on the CPU (i5-6300U, the same machine as the linear models), so the costs
+  on the CPU (i5-7300U, the same machine as the linear models), so the costs
   of all methods are comparable; a GPU is not needed. The script would use a
   GPU if `torch` detected one, but its timings would then no longer be
   comparable. If the control's dimension at N* is too large (NATOPS), or the
@@ -190,7 +191,7 @@ prerequisite checks or the run log.
   - `5_3_1_rformer.{csv,png}` (one row per dataset × model × N × seed) and
     `5_3_1_rformer_predictions.csv`
   - `axe3_run.log`
-- **Runtime:** ~ 15 min on the i5-6300U (~ 10 min of it is the CharTraj LASSO
+- **Runtime:** ~ 15 min on the i5-7300U (~ 10 min of it is the CharTraj LASSO
   control, ~ 35 s per RFormer seed).
 
 ### `compare.sh` — final comparison (section 5.5)

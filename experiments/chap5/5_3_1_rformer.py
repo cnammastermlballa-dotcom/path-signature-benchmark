@@ -62,7 +62,7 @@ See thesis section 5.5.4 for the discussion.
 Bootstrap CIs and McNemar tests are computed by 5_4_1 from the saved
 per-sample predictions.
 
-Hardware: the thesis results are trained on the CPU (Intel i5-6300U, the
+Hardware: the thesis results are trained on the CPU (Intel i5-7300U, the
 same machine as the linear models), so the costs of all methods are
 comparable; the script uses a GPU only if torch detects one. It logs
 os.cpu_count() and torch.get_num_threads().
