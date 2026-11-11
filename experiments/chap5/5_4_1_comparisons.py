@@ -544,7 +544,8 @@ def _label_fr(r: pd.Series) -> str:
     if r.method.startswith("Baseline"):
         text = f"Référence statistique, {model}"
     elif r.method.startswith("Signature"):
-        text = f"Signature lin+time, {model} ({N})"
+        text = f"Signature lin+time, {model} ({N})" + (
+            "  ★ choisie par VC (axe 2)" if r.selected is True else "")
     elif r.axis == "Axe 2":
         text = f"LASSO {r.config} ({N})" + ("  ★ choisie par VC" if r.selected is True else "")
     elif r.method == "LASSO control":
@@ -559,11 +560,18 @@ def plot_results(df: pd.DataFrame) -> plt.Figure:
 
     Per-seed RFormer rows are summarised by their seed-averaged row. A row
     repeated in several axes (same model, configuration, N and accuracy) is
-    shown once. Rows skipped for memory reasons are shown as missing.
+    shown once, keeping the CV-selection marker of any row it absorbs. Rows
+    skipped for memory reasons are shown as missing.
     """
     fig_rows = df[df.seed.isna()].copy()
     fig_rows["acc_key"] = fig_rows.test_accuracy.round(12)
-    fig_rows = fig_rows.drop_duplicates(subset=["dataset", "model", "config", "N", "acc_key"])
+    key = ["dataset", "model", "config", "N", "acc_key"]
+    # The kept (first) row inherits the CV selection of the rows it absorbs, so a
+    # selected lin+time in Axe 2 still shows its marker on the Axe 1 Signature row.
+    key_str = fig_rows[key].map(str).agg("|".join, axis=1)  # NaN-safe key
+    sel_keys = set(key_str[fig_rows.selected == True])  # noqa: E712
+    fig_rows = fig_rows.drop_duplicates(subset=key)
+    fig_rows.loc[key_str[fig_rows.index].isin(sel_keys), "selected"] = True
 
     n = len(DATASETS)
     heights = [max(len(fig_rows[fig_rows.dataset == DISPLAY_NAMES[ds]]), 1) for ds in DATASETS]
