@@ -1,0 +1,30 @@
+axis,dataset,method_a,N_a,method_b,N_b,seed,status,n_test,b,c,p_raw,p_holm,significant_raw,significant_holm
+Axe 1,ECG200,Signature Ridge,5,Baseline Ridge,,,tested,100,23,8,0.010673840530216694,0.05336920265108347,True,False
+Axe 1,ECG200,Signature LASSO,5,Baseline LASSO,,,tested,100,19,8,0.052238985896110535,0.20895594358444214,False,False
+Axe 1,RacketSports,Signature Ridge,3,Baseline Ridge,,,tested,152,17,14,0.720100131817162,0.8100644922815264,False,False
+Axe 1,RacketSports,Signature LASSO,4,Baseline LASSO,,,tested,152,24,6,0.0014309063553810122,0.008585438132286074,True,True
+Axe 1,CharTraj,Signature Ridge,5,Baseline Ridge,,,tested,1436,67,15,5.2573169769006436e-09,3.680121883830451e-08,True,True
+Axe 1,CharTraj,Signature LASSO,5,Baseline LASSO,,,tested,1436,110,13,2.6124651194145632e-20,2.0899720955316506e-19,True,True
+Axe 1,NATOPS,Signature Ridge,3,Baseline Ridge,,,tested,180,21,15,0.4050322461407632,0.8100644922815264,False,False
+Axe 1,NATOPS,Signature LASSO,3,Baseline LASSO,,,tested,180,25,13,0.07295138851623051,0.21885416554869153,False,False
+Axe 2,ECG200,LASSO lin+time,5,LASSO lin+time,5,,not_applicable,100,,,,,,
+Axe 2,RacketSports,LASSO lin+time+cumsum,5,LASSO lin+time,4,,tested,152,7,10,0.629058837890625,1.0,False,False
+Axe 2,CharTraj,LASSO lin+time+cumsum,5,LASSO lin+time,5,,tested,1436,16,10,0.32693958282470703,0.9808187484741211,False,False
+Axe 2,NATOPS,LASSO lin+time+cumsum,3,LASSO lin+time,3,,tested,180,11,8,0.6476058959960938,1.0,False,False
+Axe 3,CharTraj,RFormer,5,Signature LASSO,5,0,tested,1436,15,7,0.13380050659179688,1.0,False,False
+Axe 3,CharTraj,RFormer,5,Signature LASSO,5,1,tested,1436,15,9,0.30745625495910645,1.0,False,False
+Axe 3,CharTraj,RFormer,5,Signature LASSO,5,2,tested,1436,15,8,0.21003961563110352,1.0,False,False
+Axe 3,CharTraj,RFormer,5,Signature LASSO,5,3,tested,1436,16,9,0.2295229434967041,1.0,False,False
+Axe 3,CharTraj,RFormer,5,Signature LASSO,5,4,tested,1436,15,7,0.13380050659179688,1.0,False,False
+Axe 3,CharTraj,LASSO control,5,Signature LASSO,5,,tested,1436,16,12,0.5715881884098053,1.0,False,False
+Axe 3,NATOPS,RFormer,3,Signature LASSO,3,0,tested,180,9,9,1.0,1.0,False,False
+Axe 3,NATOPS,RFormer,3,Signature LASSO,3,1,tested,180,8,10,0.8145294189453125,1.0,False,False
+Axe 3,NATOPS,RFormer,3,Signature LASSO,3,2,tested,180,10,10,1.0,1.0,False,False
+Axe 3,NATOPS,RFormer,3,Signature LASSO,3,3,tested,180,7,13,0.26317596435546875,1.0,False,False
+Axe 3,NATOPS,RFormer,3,Signature LASSO,3,4,tested,180,9,14,0.4048728942871094,1.0,False,False
+Axe 3,NATOPS,RFormer,2,Signature LASSO,2,0,tested,180,11,6,0.332305908203125,1.0,False,False
+Axe 3,NATOPS,RFormer,2,Signature LASSO,2,1,tested,180,10,5,0.30175781249999994,1.0,False,False
+Axe 3,NATOPS,RFormer,2,Signature LASSO,2,2,tested,180,11,4,0.11846923828124999,1.0,False,False
+Axe 3,NATOPS,RFormer,2,Signature LASSO,2,3,tested,180,10,8,0.8145294189453125,1.0,False,False
+Axe 3,NATOPS,RFormer,2,Signature LASSO,2,4,tested,180,12,8,0.5034446716308594,1.0,False,False
+Axe 3,NATOPS,LASSO control,2,Signature LASSO,2,,tested,180,12,10,0.8318119049072266,1.0,False,False

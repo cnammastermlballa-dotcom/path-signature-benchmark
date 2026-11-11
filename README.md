@@ -229,18 +229,11 @@ prerequisite checks or the run log.
 
 The thesis results come from the CPU run above. `notebooks/demo_google_colab.ipynb`
 can also run Axe 3 on a Colab GPU (Runtime → T4 GPU), but its timings are not
-comparable with the CPU timings of the other methods. The repository is cloned from GitHub, so the code you want to run must
-be pushed first. `axe3.sh` needs `optimal_N_{chartraj,natops}_LR-L1.txt`: run
-`./axe1.sh` locally, upload these two files to `results/chap5/` in the Colab
-session, then:
-
-```bash
-!pip install -q iisignature
-!./axe3.sh
-```
-
-The notebook itself still copies these files from the former reference results
-folder, which no longer exists, and needs to be updated.
+comparable with the CPU timings of the other methods. The repository is cloned
+from GitHub, so the code you want to run must be pushed first. `5_3_1` needs
+`optimal_N_{chartraj,natops}_LR-L1.txt`: the notebook copies them from
+`results/reference/chap5/` (the thesis CPU run), unless `./axe1.sh` was run in
+the Colab session first. Colab results are never copied into the reference.
 
 ## Outputs
 
