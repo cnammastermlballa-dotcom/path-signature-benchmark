@@ -38,7 +38,9 @@ pip install numpy==2.3.5          # iisignature needs numpy at build time
 pip install -r requirements.txt
 ```
 
-`torch` is only needed for Axe 3 (`axe3.sh`).
+`torch` is only needed for Axe 3 (`axe3.sh`). The thesis run used the CPU
+build; to get it rather than the default CUDA wheel, install torch first:
+`pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu`.
 
 ### Versions
 
@@ -48,6 +50,8 @@ The thesis results were produced with:
 |---------|---------|
 | Python | 3.11.17 |
 | numpy | 2.3.5 |
+| pandas | 3.0.6 |
+| matplotlib | 3.11.2 |
 | scikit-learn | 1.7.2 |
 | iisignature | 0.24 |
 | torch | 2.15.0+cpu (CPU build; Axe 3 only) |
